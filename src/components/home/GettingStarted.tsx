@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { PixelRatio, Pressable } from "react-native";
+import { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { useRouter } from "expo-router";
 
@@ -9,11 +10,12 @@ import { ArrowRight } from "@tamagui/lucide-icons-2/icons/ArrowRight";
 import { ChevronRight } from "@tamagui/lucide-icons-2/icons/ChevronRight";
 import { IdCard } from "@tamagui/lucide-icons-2/icons/IdCard";
 import { useToastController } from "@tamagui/toast";
-import { Spinner, XStack, YStack } from "tamagui";
+import { Spinner, XStack } from "tamagui";
 
 import reportError from "../../utils/reportError";
 import useBeginKYC from "../../utils/useBeginKYC";
 import useOnboardingSteps from "../../utils/useOnboardingSteps";
+import AnimatedView from "../shared/AnimatedView";
 import Text from "../shared/Text";
 import View from "../shared/View";
 
@@ -48,18 +50,13 @@ export default function GettingStarted({ isDeployed, kyc }: { isDeployed: boolea
   }
 
   return (
-    <YStack
-      key="getting-started"
+    <AnimatedView
+      entering={FadeIn}
+      exiting={FadeOut}
       backgroundColor="$backgroundBrandSoft"
       borderWidth={1}
       borderColor="$borderBrandSoft"
       borderRadius="$r3"
-      opacity={1}
-      transform={[{ translateY: 0 }]}
-      transition="default"
-      animateOnly={["opacity", "transform"]}
-      enterStyle={{ opacity: 0, transform: [{ translateY: -20 }] }}
-      exitStyle={{ opacity: 0, transform: [{ translateY: -20 }] }}
     >
       <XStack justifyContent="space-between" alignItems="center" padding="$s4">
         <Text emphasized headline color="$uiBrandSecondary" maxFontSizeMultiplier={1.3}>
@@ -109,6 +106,6 @@ export default function GettingStarted({ isDeployed, kyc }: { isDeployed: boolea
           </View>
         </Pressable>
       </XStack>
-    </YStack>
+    </AnimatedView>
   );
 }
