@@ -28,14 +28,14 @@ export default function NetworkFilter({
   return (
     <XStack
       alignItems="center"
-      gap="$s2"
-      padding="$s3_5"
-      backgroundColor="$backgroundMild"
+      gap="s2"
+      padding="s3_5"
+      backgroundColor="backgroundMild"
       cursor="pointer"
+      opacity="press:0.7"
+      {...properties}
       role="button"
       aria-label={t("Select network")}
-      pressStyle={{ opacity: 0.7 }}
-      {...properties}
       onPress={() => {
         onOpenChange(true);
       }}
@@ -46,7 +46,7 @@ export default function NetworkFilter({
         ) : (
           <ChainLogo chainId={value ?? sole?.id} size={size} />
         ))}
-      <ChevronDown size={size + 2} color="$uiNeutralPrimary" />
+      <ChevronDown size={size + 2} color="uiNeutralPrimary" />
     </XStack>
   );
 }
