@@ -2,6 +2,8 @@ import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Hono } from "hono";
 import { Redis } from "ioredis";
+import { env } from "node:process";
+import { array, optional, parse, picklist, pipe, string, transform } from "valibot";
 
 import api from ".";
 import * as schema from "../database/schema";
@@ -32,6 +34,16 @@ supervise(
     Promise.all([secret("api-bridge-api-key", secrets), secret("bridge-api-url", secrets)]).then(([key, url]) =>
       createBridge(key, url),
     ),
+    Promise.resolve(
+      !parse(
+        pipe(
+          optional(string(), ""),
+          transform((value) => value.split(",").filter(Boolean)),
+          array(picklist(["business"], "unknown module")),
+        ),
+        env.DISABLED_MODULES,
+      ).includes("business"),
+    ),
     secret("api-postgres-url", secrets).then((url) => drizzle(url, { schema })),
     secret("api-intercom-identity-key", secrets).then((key) => createIntercom(key)),
     Promise.all([secret("api-manteca-api-key", secrets), secret("manteca-api-url", secrets)]).then(([key, url]) =>
@@ -58,6 +70,7 @@ supervise(
       [redis, credit, subscribe],
       authSecret,
       bridge,
+      business,
       database,
       intercom,
       manteca,
@@ -71,6 +84,7 @@ supervise(
       const { app, ready } = api({
         authSecret,
         bridge,
+        business,
         credit,
         database,
         intercom,

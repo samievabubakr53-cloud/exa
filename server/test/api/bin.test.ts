@@ -35,6 +35,7 @@ const mocks = {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
 });
 
 beforeEach(() => {
@@ -109,6 +110,7 @@ describe("api bin", () => {
     expect(mocks.api).toHaveBeenCalledExactlyOnceWith({
       authSecret: "api-auth-secret",
       bridge,
+      business: true,
       credit: queue,
       database,
       intercom,
@@ -134,6 +136,15 @@ describe("api bin", () => {
     expect(database.$client.end).toHaveBeenCalledOnce();
     expect(segment.close).toHaveBeenCalledOnce();
     await expect(redis.ping()).rejects.toThrow("Connection is closed.");
+  });
+
+  it("disables business when its module is disabled", async () => {
+    vi.stubEnv("DISABLED_MODULES", "business");
+
+    await import("../../api/bin");
+    await mocks.supervise.mock.calls[0]?.[1];
+
+    expect(mocks.api).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ business: false }));
   });
 });
 
