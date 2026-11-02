@@ -23,6 +23,13 @@ export const plugins = indexer
   })
   .existing();
 
+export const managers = indexer
+  .view("managers", {
+    plugin: text("plugin").$type<Hex>().notNull(),
+    address: text("address").$type<Hex>().notNull(),
+  })
+  .existing();
+
 export const deposits = indexer
   .view("deposits", {
     ...log(),
