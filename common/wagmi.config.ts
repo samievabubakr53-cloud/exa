@@ -232,6 +232,7 @@ export default defineConfig([
                 ),
               )}`,
               `export const appPreviewerCode: \`0x\${string}\` = "${AppPreviewer.bytecode.object}"`,
+              `export const appPreviewerDeployedCode: \`0x\${string}\` = "${AppPreviewer.deployedBytecode.object}"`,
               `export const auditors: ReadonlyMap<number, \`0x\${string}\`> = new Map(${JSON.stringify(auditors)})`,
               `export const exaPreviewerCode: \`0x\${string}\` = "${ExaPreviewer.bytecode.object}"`,
               `export const factories = ${JSON.stringify(factories)} as const`,
