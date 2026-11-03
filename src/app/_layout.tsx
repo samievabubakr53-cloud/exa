@@ -33,7 +33,7 @@ import {
   setContext,
   wrap,
 } from "@sentry/react-native";
-import { IsRestoringProvider, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { hashKey, IsRestoringProvider, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { getConnection, reconnect } from "@wagmi/core";
 import { proxy } from "comlink";
@@ -344,6 +344,30 @@ function Navigator() {
         .catch(reportError);
     }
     SplashScreen.hideAsync().catch(reportError);
+  }, [ready, isMiniApp]);
+  useEffect(() => {
+    if (!ready || !isMiniApp) return;
+    const cache = queryClient.getQueryCache();
+    const cardHash = hashKey(["card", "details"]);
+    let last: string | undefined;
+    const notify = ({ queryHash, state }: { queryHash: string; state: { data: unknown; status: string } }) => {
+      if (queryHash !== cardHash || state.status !== "success") return;
+      const message = JSON.stringify({
+        type: "exa:card",
+        hasCard: !!state.data,
+        account: getConnection(exaConfig).address,
+      });
+      if (message === last) return;
+      last = message;
+      const { ReactNativeWebView } = window as Partial<Window>;
+      if (ReactNativeWebView) ReactNativeWebView.postMessage(message);
+      else if (document.referrer) window.parent.postMessage(message, new URL(document.referrer).origin);
+    };
+    const card = cache.find({ queryKey: ["card", "details"], exact: true });
+    if (card) notify(card);
+    return cache.subscribe(({ type, query }) => {
+      if (type === "updated") notify(query);
+    });
   }, [ready, isMiniApp]);
   return (
     <Stack screenOptions={{ headerShown: false }}>
