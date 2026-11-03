@@ -1,5 +1,25 @@
 # @exactly/mobile
 
+## 1.2.41
+
+### Patch Changes
+
+- [#1764](https://github.com/exactly/exa/pull/1764) [`a6a999e`](https://github.com/exactly/exa/commit/a6a999ec51190840328977bdf9a5ed89c8ec4a5d) Thanks [@dieguezguille](https://github.com/dieguezguille)! - 🐛 unmount sheets closed while opening
+
+- [#1756](https://github.com/exactly/exa/pull/1756) [`02f7d2b`](https://github.com/exactly/exa/commit/02f7d2b230f224cf4f0b5bad025cc15e7a3e9f93) Thanks [@dieguezguille](https://github.com/dieguezguille)! - 🚸 allow dismissing spotlights
+
+- [#1764](https://github.com/exactly/exa/pull/1764) [`cf3cfae`](https://github.com/exactly/exa/commit/cf3cfae45fb78c3c7ad19159346ee5fe3d859839) Thanks [@dieguezguille](https://github.com/dieguezguille)! - 🐛 render sheets in place to keep typed keys
+
+- [#1710](https://github.com/exactly/exa/pull/1710) [`f3b94fe`](https://github.com/exactly/exa/commit/f3b94feb7db8f8916673f3f9e4bab1c5687006a4) Thanks [@cruzdanilo](https://github.com/cruzdanilo)! - 🐛 keep pin sheet height while the pin loads
+
+- [#1757](https://github.com/exactly/exa/pull/1757) [`8dae321`](https://github.com/exactly/exa/commit/8dae32114e2f29da7b05f08d9c524a081a888636) Thanks [@dieguezguille](https://github.com/dieguezguille)! - 💫 fade home greeting in place
+
+- [#1766](https://github.com/exactly/exa/pull/1766) [`9e96821`](https://github.com/exactly/exa/commit/9e96821f5210ea7e785b0839545a826f3bf0c8cb) Thanks [@dieguezguille](https://github.com/dieguezguille)! - 🐛 keep token selector visible behind network picker
+
+- [#1754](https://github.com/exactly/exa/pull/1754) [`e8ab049`](https://github.com/exactly/exa/commit/e8ab0493a21956df46e93244aa6df7972e710205) Thanks [@dieguezguille](https://github.com/dieguezguille)! - 💄 hide activity title when empty
+
+- [#1746](https://github.com/exactly/exa/pull/1746) [`9f169e1`](https://github.com/exactly/exa/commit/9f169e12a8e55913d90c3e0ebedb0ac1ed07601a) Thanks [@cruzdanilo](https://github.com/cruzdanilo)! - ⚡️ import icons directly
+
 ## 1.2.40
 
 ### Patch Changes
