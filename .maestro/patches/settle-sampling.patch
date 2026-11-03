@@ -1,0 +1,140 @@
+diff --git a/maestro-client/src/main/java/maestro/drivers/CdpWebDriver.kt b/maestro-client/src/main/java/maestro/drivers/CdpWebDriver.kt
+--- a/maestro-client/src/main/java/maestro/drivers/CdpWebDriver.kt
++++ b/maestro-client/src/main/java/maestro/drivers/CdpWebDriver.kt
+@@ -243,8 +243,6 @@
+                         cdpClient.evaluate("$key = '$value'", target)
+                     }
+ 
+-                    Thread.sleep(100)
+-
+                     val resultStr = cdpClient.evaluate(js, target)
+ 
+                     // CDP returns an empty value for expressions that evaluate to undefined (e.g.
+@@ -829,7 +827,7 @@
+     }
+ 
+     override fun waitForAppToSettle(initialHierarchy: ViewHierarchy?, appId: String?, timeoutMs: Int?): ViewHierarchy {
+-        return ScreenshotUtils.waitForAppToSettle(initialHierarchy, this)
++        return ScreenshotUtils.waitForAppToSettle(initialHierarchy, this, hierarchyDelayMs = 300)
+     }
+ 
+     override fun waitUntilScreenIsStatic(timeoutMs: Long): Boolean {
+diff --git a/maestro-client/src/main/java/maestro/utils/ScreenshotUtils.kt b/maestro-client/src/main/java/maestro/utils/ScreenshotUtils.kt
+--- a/maestro-client/src/main/java/maestro/utils/ScreenshotUtils.kt
++++ b/maestro-client/src/main/java/maestro/utils/ScreenshotUtils.kt
+@@ -38,14 +38,15 @@
+         fun waitForAppToSettle(
+             initialHierarchy: ViewHierarchy?,
+             driver: Driver,
+-            timeoutMs: Int? = null
++            timeoutMs: Int? = null,
++            hierarchyDelayMs: Long = 0
+         ): ViewHierarchy {
+             var latestHierarchy: ViewHierarchy
+             if (timeoutMs != null) {
+                 val endTime = System.currentTimeMillis() + timeoutMs
+-                latestHierarchy = initialHierarchy ?: viewHierarchy(driver)
++                latestHierarchy = initialHierarchy ?: viewHierarchy(driver, hierarchyDelayMs)
+                 do {
+-                    val hierarchyAfter = viewHierarchy(driver)
++                    val hierarchyAfter = viewHierarchy(driver, hierarchyDelayMs)
+                     if (latestHierarchy == hierarchyAfter) {
+                         val isLoading = latestHierarchy.root.attributes.getOrDefault("is-loading", "false").toBoolean()
+                         if (!isLoading) {
+@@ -55,9 +56,9 @@
+                     latestHierarchy = hierarchyAfter
+                 } while (System.currentTimeMillis() < endTime)
+             } else {
+-                latestHierarchy = initialHierarchy ?: viewHierarchy(driver)
++                latestHierarchy = initialHierarchy ?: viewHierarchy(driver, hierarchyDelayMs)
+                 repeat(10) {
+-                    val hierarchyAfter = viewHierarchy(driver)
++                    val hierarchyAfter = viewHierarchy(driver, hierarchyDelayMs)
+                     if (latestHierarchy == hierarchyAfter) {
+                         val isLoading = latestHierarchy.root.attributes.getOrDefault("is-loading", "false").toBoolean()
+                         if (!isLoading) {
+@@ -95,7 +96,8 @@
+             }
+         }
+ 
+-        private fun viewHierarchy(driver: Driver): ViewHierarchy {
++        private fun viewHierarchy(driver: Driver, delayMs: Long): ViewHierarchy {
++            if (delayMs > 0) MaestroTimer.sleep(MaestroTimer.Reason.WAIT_TO_SETTLE, delayMs)
+             return ViewHierarchy.from(driver, false)
+         }
+     }
+diff --git a/maestro-client/src/test/java/maestro/utils/ScreenshotUtilsTimingTest.kt b/maestro-client/src/test/java/maestro/utils/ScreenshotUtilsTimingTest.kt
+new file mode 100644
+--- /dev/null
++++ b/maestro-client/src/test/java/maestro/utils/ScreenshotUtilsTimingTest.kt
+@@ -0,0 +1,70 @@
++package maestro.utils
++
++import com.google.common.truth.Truth.assertThat
++import io.mockk.every
++import io.mockk.mockk
++import maestro.DeviceInfo
++import maestro.Driver
++import maestro.TreeNode
++import maestro.ViewHierarchy
++import maestro.device.Platform
++import org.junit.jupiter.api.AfterEach
++import org.junit.jupiter.api.BeforeEach
++import org.junit.jupiter.api.Test
++
++class ScreenshotUtilsTimingTest {
++    private val sleeps = mutableListOf<Long>()
++    private val timer = MaestroTimer.sleep
++    private val driver = mockk<Driver>()
++    private val first = TreeNode(attributes = mutableMapOf("text" to "first", "bounds" to "[0,0][100,100]"), children = emptyList())
++    private val second = first.copy(attributes = first.attributes.toMutableMap().apply { put("text", "second") })
++
++    @BeforeEach
++    fun setUp() {
++        every { driver.deviceInfo() } returns DeviceInfo(Platform.WEB, 100, 100, 100, 100)
++        MaestroTimer.setTimerFunc { _, duration -> sleeps.add(duration) }
++    }
++
++    @AfterEach
++    fun tearDown() {
++        MaestroTimer.setTimerFunc(timer)
++    }
++
++    @Test
++    fun `delays both fresh samples when no initial hierarchy is available`() {
++        every { driver.contentDescriptor(false) } returns first
++
++        val settled = ScreenshotUtils.waitForAppToSettle(null, driver, hierarchyDelayMs = 300)
++
++        assertThat(settled).isEqualTo(ViewHierarchy(first))
++        assertThat(sleeps).containsExactly(300L, 300L).inOrder()
++    }
++
++    @Test
++    fun `delays the comparison with an existing hierarchy`() {
++        every { driver.contentDescriptor(false) } returns first
++
++        ScreenshotUtils.waitForAppToSettle(ViewHierarchy(first), driver, hierarchyDelayMs = 300)
++
++        assertThat(sleeps).containsExactly(300L)
++    }
++
++    @Test
++    fun `preserves the extra polling delay after a hierarchy change`() {
++        every { driver.contentDescriptor(false) } returnsMany listOf(first, second, second)
++
++        val settled = ScreenshotUtils.waitForAppToSettle(null, driver, hierarchyDelayMs = 300)
++
++        assertThat(settled).isEqualTo(ViewHierarchy(second))
++        assertThat(sleeps).containsExactly(300L, 300L, 200L, 300L).inOrder()
++    }
++
++    @Test
++    fun `adds no sample delay for other drivers`() {
++        every { driver.contentDescriptor(false) } returnsMany listOf(first, second, second)
++
++        ScreenshotUtils.waitForAppToSettle(null, driver)
++
++        assertThat(sleeps).containsExactly(200L)
++    }
++}
