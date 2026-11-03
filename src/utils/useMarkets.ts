@@ -19,7 +19,12 @@ import { MATURITY_INTERVAL } from "@exactly/lib";
 
 import useAccount from "./useAccount";
 
-export default function useMarkets(query?: { enabled?: boolean; gcTime?: number; refetchInterval?: number }) {
+export default function useMarkets(query?: {
+  enabled?: boolean;
+  gcTime?: number;
+  refetchInterval?: number;
+  refetchOnMount?: "always" | boolean;
+}) {
   const { address: account } = useAccount();
   const result = useReadContracts({
     allowFailure: false,

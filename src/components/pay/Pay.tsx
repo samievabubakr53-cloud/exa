@@ -70,7 +70,7 @@ export default function Pay() {
   });
   const isLatestPlugin = installedPlugins?.[0] === exaPluginAddress;
   const { market: exaUSDC } = useAsset(marketUSDCAddress);
-  const { markets, timestamp, refetch } = useMarkets({ refetchInterval: 30_000 });
+  const { markets, timestamp, refetch } = useMarkets({ refetchInterval: 30_000, refetchOnMount: "always" });
 
   const { data: hidden } = useQuery<boolean>({ queryKey: ["settings", "sensitive"] });
   const { data: rolloverIntroShown } = useQuery<boolean>({ queryKey: ["settings", "rollover-intro-shown"] });
